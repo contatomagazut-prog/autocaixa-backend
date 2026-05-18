@@ -131,6 +131,9 @@ app.post("/webhook", async (req, res) => {
     // SALVAR SUPABASE
     // ==========================
 
+    console.log("SUPABASE_URL:")
+console.log(process.env.SUPABASE_URL)
+
     const response = await fetch(
       `${process.env.SUPABASE_URL}/rest/v1/assinaturas`,
       {
