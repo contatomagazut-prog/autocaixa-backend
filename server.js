@@ -43,7 +43,7 @@ app.post("/criar-pagamento", async (req, res) => {
               title: "AUTOCAIXA PRO",
               quantity: 1,
               currency_id: "BRL",
-              unit_price: 9.90
+              unit_price: 0.12
             }
           ],
 
