@@ -9,11 +9,75 @@ const app = express()
 app.use(cors())
 app.use(express.json())
 
+// ==============================
+// TESTE ONLINE
+// ==============================
+
 app.get("/", (req, res) => {
 
   res.status(200).send("Backend online")
 
 })
+
+// ==============================
+// CRIAR PAGAMENTO MERCADO PAGO
+// ==============================
+
+app.post("/criar-pagamento", async (req, res) => {
+
+  try {
+
+    const response = await fetch(
+      "https://api.mercadopago.com/checkout/preferences",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization":
+            `Bearer ${process.env.MP_ACCESS_TOKEN}`
+        },
+        body: JSON.stringify({
+
+          items: [
+            {
+              title: "AUTOCAIXA PRO",
+              quantity: 1,
+              currency_id: "BRL",
+              unit_price: 9.90
+            }
+          ],
+
+          notification_url:
+            "https://autocaixa-backend.vercel.app/webhook"
+
+        })
+      }
+    )
+
+    const data = await response.json()
+
+    console.log("Pagamento criado:")
+    console.log(data)
+
+    return res.status(200).json({
+      init_point: data.init_point
+    })
+
+  } catch (err) {
+
+    console.log(err)
+
+    return res.status(500).json({
+      error: err.message
+    })
+
+  }
+
+})
+
+// ==============================
+// WEBHOOK MERCADO PAGO
+// ==============================
 
 app.post("/webhook", async (req, res) => {
 
@@ -32,6 +96,41 @@ app.post("/webhook", async (req, res) => {
 
     }
 
+    // ==========================
+    // CONSULTA PAGAMENTO REAL
+    // ==========================
+
+    const pagamento = await fetch(
+      `https://api.mercadopago.com/v1/payments/${paymentId}`,
+      {
+        headers: {
+          "Authorization":
+            `Bearer ${process.env.MP_ACCESS_TOKEN}`
+        }
+      }
+    )
+
+    const pagamentoData = await pagamento.json()
+
+    console.log("Dados pagamento:")
+    console.log(pagamentoData)
+
+    // ==========================
+    // APENAS PAGAMENTO APROVADO
+    // ==========================
+
+    if (pagamentoData.status !== "approved") {
+
+      return res.status(200).json({
+        ignored: true
+      })
+
+    }
+
+    // ==========================
+    // SALVAR SUPABASE
+    // ==========================
+
     const response = await fetch(
       `${process.env.SUPABASE_URL}/rest/v1/assinaturas`,
       {
@@ -45,13 +144,14 @@ app.post("/webhook", async (req, res) => {
         },
         body: JSON.stringify({
           payment_id: String(paymentId),
-          status: "approved"
+          status: pagamentoData.status
         })
       }
     )
 
     const data = await response.text()
 
+    console.log("Supabase:")
     console.log(data)
 
     return res.status(200).json({
