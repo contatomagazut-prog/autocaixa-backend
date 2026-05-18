@@ -151,8 +151,11 @@ app.post("/webhook", async (req, res) => {
 
     const data = await response.text()
 
-    console.log("Supabase:")
-    console.log(data)
+console.log("STATUS SUPABASE:")
+console.log(response.status)
+
+console.log("RESPOSTA SUPABASE:")
+console.log(data)
 
     return res.status(200).json({
       success: true
