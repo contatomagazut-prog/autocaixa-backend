@@ -86,7 +86,9 @@ app.post("/webhook", async (req, res) => {
     console.log("Webhook recebido:")
     console.log(req.body)
 
-    const paymentId = req.body?.data?.id
+    const paymentId =
+  req.body?.data?.id ||
+  req.body?.resource?.split("/").pop()
 
     if (!paymentId) {
 
