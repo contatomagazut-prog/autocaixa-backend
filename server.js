@@ -81,6 +81,12 @@ app.post("/criar-pagamento", async (req, res) => {
 
 app.post("/webhook", async (req, res) => {
 
+  console.log("URL COMPLETA:")
+  console.log(process.env.SUPABASE_URL)
+
+  console.log("TAMANHO:")
+  console.log(process.env.SUPABASE_URL.length)
+
   try {
 
     console.log("Webhook recebido:")
