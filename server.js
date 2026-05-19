@@ -33,7 +33,7 @@ app.post("/criar-pagamento", async (req, res) => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization":
+          Authorization:
             `Bearer ${process.env.MP_ACCESS_TOKEN}`
         },
         body: JSON.stringify({
@@ -81,46 +81,55 @@ app.post("/criar-pagamento", async (req, res) => {
 
 app.post("/webhook", async (req, res) => {
 
-  console.log("URL COMPLETA:")
-  console.log(process.env.SUPABASE_URL)
-
-  console.log("TAMANHO:")
-  console.log(process.env.SUPABASE_URL.length)
-
   try {
 
     console.log("Webhook recebido:")
     console.log(req.body)
 
+    console.log("URL COMPLETA:")
+    console.log(process.env.SUPABASE_URL)
+
+    console.log("TAMANHO:")
+    console.log(process.env.SUPABASE_URL?.length)
+
     let paymentId = null
 
-if (req.body?.type === "payment") {
-  paymentId = req.body?.data?.id
-}
+    // PAYMENT
+    if (req.body?.type === "payment") {
 
-if (!paymentId) {
-  return res.status(200).json({
-    ignored: true
-  })
-}
+      paymentId = req.body?.data?.id
 
+    }
+
+    // MERCHANT ORDER
+    if (req.body?.topic === "merchant_order") {
+
+      console.log("Merchant order ignorado")
+
+      return res.status(200).json({
+        ignored: true
+      })
+
+    }
+
+    // SEM PAYMENT ID
     if (!paymentId) {
 
-      return res.status(400).json({
-        error: "Pagamento não encontrado"
+      return res.status(200).json({
+        ignored: true
       })
 
     }
 
     // ==========================
-    // CONSULTA PAGAMENTO REAL
+    // CONSULTA PAGAMENTO
     // ==========================
 
     const pagamento = await fetch(
       `https://api.mercadopago.com/v1/payments/${paymentId}`,
       {
         headers: {
-          "Authorization":
+          Authorization:
             `Bearer ${process.env.MP_ACCESS_TOKEN}`
         }
       }
@@ -128,11 +137,11 @@ if (!paymentId) {
 
     const pagamentoData = await pagamento.json()
 
-    console.log("Dados pagamento:")
+    console.log("Pagamento:")
     console.log(pagamentoData)
 
     // ==========================
-    // APENAS PAGAMENTO APROVADO
+    // APENAS APROVADO
     // ==========================
 
     if (pagamentoData.status !== "approved") {
@@ -147,19 +156,16 @@ if (!paymentId) {
     // SALVAR SUPABASE
     // ==========================
 
-    console.log("SUPABASE_URL:")
-console.log(process.env.SUPABASE_URL)
-
     const response = await fetch(
       `${process.env.SUPABASE_URL}/rest/v1/assinaturas`,
       {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "apikey": process.env.SUPABASE_KEY,
-          "Authorization":
+          apikey: process.env.SUPABASE_KEY,
+          Authorization:
             `Bearer ${process.env.SUPABASE_KEY}`,
-          "Prefer": "resolution=merge-duplicates"
+          Prefer: "resolution=merge-duplicates"
         },
         body: JSON.stringify({
           payment_id: String(paymentId),
@@ -170,11 +176,11 @@ console.log(process.env.SUPABASE_URL)
 
     const data = await response.text()
 
-console.log("STATUS SUPABASE:")
-console.log(response.status)
+    console.log("STATUS SUPABASE:")
+    console.log(response.status)
 
-console.log("RESPOSTA SUPABASE:")
-console.log(data)
+    console.log("RESPOSTA SUPABASE:")
+    console.log(data)
 
     return res.status(200).json({
       success: true
