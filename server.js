@@ -86,9 +86,17 @@ app.post("/webhook", async (req, res) => {
     console.log("Webhook recebido:")
     console.log(req.body)
 
-    const paymentId =
-  req.body?.data?.id ||
-  req.body?.resource?.split("/").pop()
+    let paymentId = null
+
+if (req.body?.type === "payment") {
+  paymentId = req.body?.data?.id
+}
+
+if (!paymentId) {
+  return res.status(200).json({
+    ignored: true
+  })
+}
 
     if (!paymentId) {
 
