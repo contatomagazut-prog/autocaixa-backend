@@ -38,17 +38,30 @@ app.post("/criar-pagamento", async (req, res) => {
         },
         body: JSON.stringify({
 
-  items: [
+  items:[
     {
-      title: "AUTOCAIXA PRO",
-      quantity: 1,
-      currency_id: "BRL",
-      unit_price: 0.12
+      title:"AUTOCAIXA PRO",
+      quantity:1,
+      currency_id:"BRL",
+      unit_price:0.12
     }
   ],
 
+  payer:{
+
+    email:
+
+      req.body.email ||
+
+      "cliente@autocaixa.com"
+
+  },
+
   external_reference:
-    req.body.userId || "SEM_USUARIO",
+
+    req.body.userId ||
+
+    "SEM_USUARIO",
 
   notification_url:
     "https://autocaixa-backend.vercel.app/webhook"
