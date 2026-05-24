@@ -143,6 +143,33 @@ app.post("/webhook", async (req, res) => {
     console.log("Pagamento:")
     console.log(pagamentoData)
 
+console.log("EMAIL DEBUG")
+
+console.log(
+"payer:",
+pagamentoData.payer
+)
+
+console.log(
+"additional_info:",
+pagamentoData.additional_info
+)
+
+console.log(
+"metadata:",
+pagamentoData.metadata
+)
+
+console.log(
+"transaction_details:",
+pagamentoData.transaction_details
+)
+
+console.log(
+"point_of_interaction:",
+pagamentoData.point_of_interaction
+)
+
     // ==========================
     // APENAS APROVADO
     // ==========================
@@ -186,11 +213,21 @@ app.post("/webhook", async (req, res) => {
 
   email_pagador:
 
-    pagamentoData.payer?.email ||
+pagamentoData.payer?.email ||
 
-    pagamentoData.additional_info?.payer?.email ||
+pagamentoData.additional_info?.payer?.email ||
 
-    "EMAIL_NAO_DISPONIVEL",
+pagamentoData.metadata?.email ||
+
+pagamentoData.transaction_details?.payer?.email ||
+
+pagamentoData.card?.cardholder?.email ||
+
+pagamentoData.point_of_interaction
+ ?.transaction_data
+ ?.payer_email ||
+
+"EMAIL_NAO_DISPONIVEL",
 
   data_pagamento:
     pagamentoData.date_approved,
@@ -216,11 +253,21 @@ app.post("/webhook", async (req, res) => {
 
       email:
 
-        pagamentoData.payer?.email ||
+pagamentoData.payer?.email ||
 
-        pagamentoData.additional_info?.payer?.email ||
+pagamentoData.additional_info?.payer?.email ||
 
-        "EMAIL_NAO_DISPONIVEL"
+pagamentoData.metadata?.email ||
+
+pagamentoData.transaction_details?.payer?.email ||
+
+pagamentoData.card?.cardholder?.email ||
+
+pagamentoData.point_of_interaction
+ ?.transaction_data
+ ?.payer_email ||
+
+"EMAIL_NAO_DISPONIVEL"
 
     }),
 
