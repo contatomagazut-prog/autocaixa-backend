@@ -38,19 +38,22 @@ app.post("/criar-pagamento", async (req, res) => {
         },
         body: JSON.stringify({
 
-          items: [
-            {
-              title: "AUTOCAIXA PRO",
-              quantity: 1,
-              currency_id: "BRL",
-              unit_price: 0.12
-            }
-          ],
+  items: [
+    {
+      title: "AUTOCAIXA PRO",
+      quantity: 1,
+      currency_id: "BRL",
+      unit_price: 0.12
+    }
+  ],
 
-          notification_url:
-            "https://autocaixa-backend.vercel.app/webhook"
+  external_reference:
+    req.body.userId || "SEM_USUARIO",
 
-        })
+  notification_url:
+    "https://autocaixa-backend.vercel.app/webhook"
+
+})
       }
     )
 
@@ -168,9 +171,52 @@ app.post("/webhook", async (req, res) => {
           Prefer: "resolution=merge-duplicates"
         },
         body: JSON.stringify({
-          payment_id: String(paymentId),
-          status: pagamentoData.status
-        })
+
+  payment_id: String(paymentId),
+
+  status: pagamentoData.status,
+
+  valor:
+    pagamentoData.transaction_amount,
+
+  usuario_id:
+    pagamentoData.external_reference,
+
+  email_pagador:
+    pagamentoData.payer?.email,
+
+  data_pagamento:
+    pagamentoData.date_approved,
+
+  comprovante_pix:
+    JSON.stringify({
+
+      id:
+        pagamentoData.id,
+
+      valor:
+        pagamentoData.transaction_amount,
+
+      data:
+        pagamentoData.date_approved,
+
+      status:
+        pagamentoData.status,
+
+      metodo:
+        pagamentoData.payment_method_id,
+
+      email:
+        pagamentoData.payer?.email
+
+    }),
+
+  data_brasilia:
+    new Date(
+      Date.now() - 10800000
+    ).toISOString()
+
+})
       }
     )
 
