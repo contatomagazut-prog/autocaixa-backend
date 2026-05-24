@@ -47,15 +47,19 @@ app.post("/criar-pagamento", async (req, res) => {
     }
   ],
 
-  payer:{
+  payer: {
 
-    email:
+ email:
 
-      req.body.email ||
+ req.body.email
+ ?.trim()
+ ?.toLowerCase()
 
-      "cliente@autocaixa.com"
+ ||
 
-  },
+ "cliente@autocaixa.com"
+
+},
 
   external_reference:
 
@@ -74,6 +78,14 @@ app.post("/criar-pagamento", async (req, res) => {
 
     console.log("Pagamento criado:")
     console.log(data)
+
+console.log(
+"EMAIL RECEBIDO APP:"
+)
+
+console.log(
+req.body.email
+)
 
     return res.status(200).json({
       init_point: data.init_point
