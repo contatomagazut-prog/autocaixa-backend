@@ -38,37 +38,35 @@ app.post("/criar-pagamento", async (req, res) => {
         },
         body: JSON.stringify({
 
-  items:[
-    {
-      title:"AUTOCAIXA PRO",
-      quantity:1,
-      currency_id:"BRL",
-      unit_price:0.12
-    }
-  ],
+items:[
 
-  payer: {
+{
 
- email:
+title:"AUTOCAIXA PRO",
 
- req.body.email
- ?.trim()
- ?.toLowerCase()
+quantity:1,
 
- ||
+currency_id:"BRL",
 
- "cliente@autocaixa.com"
+unit_price:0.12
+
+}
+
+],
+
+payer:{
+
+email:req.body.email
 
 },
 
-  external_reference:
+external_reference:
 
-    req.body.userId ||
+req.body.userId,
 
-    "SEM_USUARIO",
+notification_url:
 
-  notification_url:
-    "https://autocaixa-backend.vercel.app/webhook"
+"https://autocaixa-backend.vercel.app/webhook"
 
 })
       }
