@@ -156,6 +156,18 @@ app.post("/webhook", async (req, res) => {
     console.log("Pagamento:")
     console.log(pagamentoData)
 
+console.log("========== PAGAMENTO JSON ==========")
+
+console.log(
+JSON.stringify(
+pagamentoData,
+null,
+2
+)
+)
+
+console.log("========== FIM JSON ==========")
+
 console.log(
 JSON.stringify(
 pagamentoData,
