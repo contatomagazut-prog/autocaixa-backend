@@ -151,55 +151,135 @@ app.post("/webhook", async (req, res) => {
     }
 
     // ==========================
-    // CONSULTA PAGAMENTO
-    // ==========================
+// CONSULTA PAGAMENTO
+// ==========================
 
-    const pagamento = await fetch(
-      `https://api.mercadopago.com/v1/payments/${paymentId}`,
-      {
-        headers: {
-          Authorization:
-            `Bearer ${process.env.MP_ACCESS_TOKEN}`
-        }
-      }
-    )
+const pagamento = await fetch(
 
-    const pagamentoData = await pagamento.json()
+`https://api.mercadopago.com/v1/payments/${paymentId}`,
 
-const emailFinal =
+{
 
-pagamentoData.payer?.email ||
+headers:{
 
-pagamentoData.additional_info?.payer?.email ||
+Authorization:
 
-pagamentoData.metadata?.email ||
+`Bearer ${process.env.MP_ACCESS_TOKEN}`
 
-pagamentoData.transaction_details?.payer?.email ||
+}
 
-pagamentoData.card?.cardholder?.email ||
+}
 
-pagamentoData.point_of_interaction
-?.transaction_data
-?.payer_email ||
+)
 
-"EMAIL_NAO_DISPONIVEL"
+const pagamentoData =
 
-console.log("EMAIL ENCONTRADO:")
-console.log(emailFinal)
+await pagamento.json()
 
 
-console.log("========== PAGAMENTO JSON ==========")
+// ==========================
+// BUSCAR EMAIL TEMPORARIO
+// ==========================
+
+const usuarioId =
+
+pagamentoData.external_reference
+
+let emailFinal =
+
+"EMAIL_NAO_ENCONTRADO"
+
+try{
+
+const buscaEmail=
+
+await fetch(
+
+`${process.env.SUPABASE_URL}/rest/v1/pagamentos_pendentes?usuario_id=eq.${usuarioId}`,
+
+{
+
+headers:{
+
+apikey:
+
+process.env.SUPABASE_KEY,
+
+Authorization:
+
+`Bearer ${process.env.SUPABASE_KEY}`
+
+}
+
+}
+
+)
+
+const dadosEmail=
+
+await buscaEmail.json()
+
+if(
+
+dadosEmail?.length
+
+){
+
+emailFinal=
+
+dadosEmail[0].email
+
+}
+
+}catch(e){
 
 console.log(
+
+"ERRO EMAIL TEMPORARIO"
+
+)
+
+console.log(e)
+
+}
+
+console.log(
+
+"EMAIL FINAL:"
+
+)
+
+console.log(
+
+emailFinal
+
+)
+
+console.log(
+
+"========== PAGAMENTO JSON =========="
+
+)
+
+console.log(
+
 JSON.stringify(
+
 pagamentoData,
+
 null,
+
 2
-)
+
 )
 
-console.log("========== FIM JSON ==========")
+)
 
+console.log(
+
+"========== FIM JSON =========="
+
+)
 
 
     // ==========================
@@ -213,6 +293,84 @@ console.log("========== FIM JSON ==========")
       })
 
     }
+
+    // ==========================
+// BUSCAR EMAIL TEMPORARIO
+// ==========================
+
+const usuarioId =
+
+pagamentoData.external_reference
+
+let emailFinal =
+
+"EMAIL_NAO_ENCONTRADO"
+
+try{
+
+const buscaEmail=
+
+await fetch(
+
+`${process.env.SUPABASE_URL}/rest/v1/pagamentos_pendentes?usuario_id=eq.${usuarioId}`,
+
+{
+
+headers:{
+
+apikey:
+
+process.env.SUPABASE_KEY,
+
+Authorization:
+
+`Bearer ${process.env.SUPABASE_KEY}`
+
+}
+
+}
+
+)
+
+const dadosEmail=
+
+await buscaEmail.json()
+
+if(
+
+dadosEmail?.length
+
+){
+
+emailFinal=
+
+dadosEmail[0].email
+
+}
+
+}catch(e){
+
+console.log(
+
+"ERRO EMAIL TEMPORARIO"
+
+)
+
+console.log(e)
+
+}
+
+console.log(
+
+"EMAIL FINAL:"
+
+)
+
+console.log(
+
+emailFinal
+
+)
 
     // ==========================
     // SALVAR SUPABASE
