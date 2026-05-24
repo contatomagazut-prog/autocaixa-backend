@@ -153,9 +153,6 @@ app.post("/webhook", async (req, res) => {
 
     const pagamentoData = await pagamento.json()
 
-    console.log("Pagamento:")
-    console.log(pagamentoData)
-
 console.log("========== PAGAMENTO JSON ==========")
 
 console.log(
