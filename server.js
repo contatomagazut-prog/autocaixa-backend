@@ -172,9 +172,11 @@ app.post("/webhook", async (req, res) => {
         },
         body: JSON.stringify({
 
-  payment_id: String(paymentId),
+  payment_id:
+    String(paymentId),
 
-  status: pagamentoData.status,
+  status:
+    pagamentoData.status,
 
   valor:
     pagamentoData.transaction_amount,
@@ -183,12 +185,18 @@ app.post("/webhook", async (req, res) => {
     pagamentoData.external_reference,
 
   email_pagador:
-    pagamentoData.payer?.email,
+
+    pagamentoData.payer?.email ||
+
+    pagamentoData.additional_info?.payer?.email ||
+
+    "EMAIL_NAO_DISPONIVEL",
 
   data_pagamento:
     pagamentoData.date_approved,
 
   comprovante_pix:
+
     JSON.stringify({
 
       id:
@@ -207,11 +215,17 @@ app.post("/webhook", async (req, res) => {
         pagamentoData.payment_method_id,
 
       email:
-        pagamentoData.payer?.email
+
+        pagamentoData.payer?.email ||
+
+        pagamentoData.additional_info?.payer?.email ||
+
+        "EMAIL_NAO_DISPONIVEL"
 
     }),
 
   data_brasilia:
+
     new Date(
       Date.now() - 10800000
     ).toISOString()
