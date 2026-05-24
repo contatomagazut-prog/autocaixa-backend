@@ -20,84 +20,141 @@ app.get("/", (req, res) => {
 })
 
 // ==============================
-// CRIAR PAGAMENTO MERCADO PAGO
+// CRIAR PAGAMENTO
 // ==============================
 
 app.post("/criar-pagamento", async (req, res) => {
 
   try {
 
-const response = await fetch(
-  "https://api.mercadopago.com/checkout/preferences",
+    const { userId, email } = req.body
+
+    // ==========================
+    // SALVAR EMAIL TEMPORARIO
+    // ==========================
+
+    await fetch(
+
+      `${process.env.SUPABASE_URL}/rest/v1/pagamentos_pendentes`,
+
+      {
+
+        method:"POST",
+
+        headers:{
+
+          "Content-Type":"application/json",
+
+          apikey:
+          process.env.SUPABASE_KEY,
+
+          Authorization:
+          `Bearer ${process.env.SUPABASE_KEY}`
+
+        },
+
+        body:JSON.stringify({
+
+          usuario_id:userId,
+
+          email:email
+
+        })
+
+      }
+
+    )
+
+    // ==========================
+    // CRIAR CHECKOUT MP
+    // ==========================
 
     const response = await fetch(
+
       "https://api.mercadopago.com/checkout/preferences",
+
       {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+
+        method:"POST",
+
+        headers:{
+
+          "Content-Type":"application/json",
+
           Authorization:
-            `Bearer ${process.env.MP_ACCESS_TOKEN}`
+          `Bearer ${process.env.MP_ACCESS_TOKEN}`
+
         },
-        body: JSON.stringify({
 
-items:[
+        body:JSON.stringify({
 
-{
+          items:[
 
-title:"AUTOCAIXA PRO",
+            {
 
-quantity:1,
+              title:"AUTOCAIXA PRO",
 
-currency_id:"BRL",
+              quantity:1,
 
-unit_price:0.12
+              currency_id:"BRL",
 
-}
+              unit_price:0.12
 
-],
+            }
 
-payer:{
+          ],
 
-email:req.body.email
+          payer:{
 
-},
+            email:email
 
-external_reference:
+          },
 
-req.body.userId,
+          external_reference:userId,
 
-notification_url:
+          notification_url:
+          "https://autocaixa-backend.vercel.app/webhook"
 
-"https://autocaixa-backend.vercel.app/webhook"
+        })
 
-})
       }
+
     )
 
     const data = await response.json()
 
-    console.log("Pagamento criado:")
+    console.log("EMAIL RECEBIDO APP:")
+    console.log(email)
+
+    console.log("PAGAMENTO CRIADO:")
     console.log(data)
 
-console.log(
-"EMAIL RECEBIDO APP:"
-)
+    if(!data.init_point){
 
-console.log(
-req.body.email
-)
+      return res.status(500).json({
+
+        error:"Mercado Pago nao retornou checkout"
+
+      })
+
+    }
 
     return res.status(200).json({
-      init_point: data.init_point
+
+      init_point:data.init_point
+
     })
 
-  } catch (err) {
+  }
+
+  catch(err){
 
     console.log(err)
 
     return res.status(500).json({
-      error: err.message
+
+      error:err.message
+
     })
 
   }
@@ -105,7 +162,7 @@ req.body.email
 })
 
 // ==============================
-// WEBHOOK MERCADO PAGO
+// WEBHOOK
 // ==============================
 
 app.post("/webhook", async (req, res) => {
@@ -113,354 +170,335 @@ app.post("/webhook", async (req, res) => {
   try {
 
     console.log("Webhook recebido:")
+
     console.log(req.body)
-
-    console.log("URL COMPLETA:")
-    console.log(process.env.SUPABASE_URL)
-
-    console.log("TAMANHO:")
-    console.log(process.env.SUPABASE_URL?.length)
 
     let paymentId = null
 
-    // PAYMENT
-    if (req.body?.type === "payment") {
+    if(
 
-      paymentId = req.body?.data?.id
+      req.body?.type === "payment"
+
+    ){
+
+      paymentId =
+      req.body.data.id
 
     }
 
-    // MERCHANT ORDER
-    if (req.body?.topic === "merchant_order") {
+    if(
 
-      console.log("Merchant order ignorado")
+      req.body?.topic ===
+      "merchant_order"
+
+    ){
+
+      console.log(
+
+        "Merchant order ignorado"
+
+      )
 
       return res.status(200).json({
-        ignored: true
+
+        ignored:true
+
       })
 
     }
 
-    // SEM PAYMENT ID
-    if (!paymentId) {
+    if(!paymentId){
 
       return res.status(200).json({
-        ignored: true
-      })
 
-    }
+        ignored:true
 
-    // ==========================
-// CONSULTA PAGAMENTO
-// ==========================
-
-const pagamento = await fetch(
-
-`https://api.mercadopago.com/v1/payments/${paymentId}`,
-
-{
-
-headers:{
-
-Authorization:
-
-`Bearer ${process.env.MP_ACCESS_TOKEN}`
-
-}
-
-}
-
-)
-
-const pagamentoData =
-
-await pagamento.json()
-
-
-// ==========================
-// BUSCAR EMAIL TEMPORARIO
-// ==========================
-
-const usuarioId =
-
-pagamentoData.external_reference
-
-let emailFinal =
-
-"EMAIL_NAO_ENCONTRADO"
-
-try{
-
-const buscaEmail=
-
-await fetch(
-
-`${process.env.SUPABASE_URL}/rest/v1/pagamentos_pendentes?usuario_id=eq.${usuarioId}`,
-
-{
-
-headers:{
-
-apikey:
-
-process.env.SUPABASE_KEY,
-
-Authorization:
-
-`Bearer ${process.env.SUPABASE_KEY}`
-
-}
-
-}
-
-)
-
-const dadosEmail=
-
-await buscaEmail.json()
-
-if(
-
-dadosEmail?.length
-
-){
-
-emailFinal=
-
-dadosEmail[0].email
-
-}
-
-}catch(e){
-
-console.log(
-
-"ERRO EMAIL TEMPORARIO"
-
-)
-
-console.log(e)
-
-}
-
-console.log(
-
-"EMAIL FINAL:"
-
-)
-
-console.log(
-
-emailFinal
-
-)
-
-console.log(
-
-"========== PAGAMENTO JSON =========="
-
-)
-
-console.log(
-
-JSON.stringify(
-
-pagamentoData,
-
-null,
-
-2
-
-)
-
-)
-
-console.log(
-
-"========== FIM JSON =========="
-
-)
-
-
-    // ==========================
-    // APENAS APROVADO
-    // ==========================
-
-    if (pagamentoData.status !== "approved") {
-
-      return res.status(200).json({
-        ignored: true
       })
 
     }
 
     // ==========================
-// BUSCAR EMAIL TEMPORARIO
-// ==========================
-
-const usuarioId =
-
-pagamentoData.external_reference
-
-let emailFinal =
-
-"EMAIL_NAO_ENCONTRADO"
-
-try{
-
-const buscaEmail=
-
-await fetch(
-
-`${process.env.SUPABASE_URL}/rest/v1/pagamentos_pendentes?usuario_id=eq.${usuarioId}`,
-
-{
-
-headers:{
-
-apikey:
-
-process.env.SUPABASE_KEY,
-
-Authorization:
-
-`Bearer ${process.env.SUPABASE_KEY}`
-
-}
-
-}
-
-)
-
-const dadosEmail=
-
-await buscaEmail.json()
-
-if(
-
-dadosEmail?.length
-
-){
-
-emailFinal=
-
-dadosEmail[0].email
-
-}
-
-}catch(e){
-
-console.log(
-
-"ERRO EMAIL TEMPORARIO"
-
-)
-
-console.log(e)
-
-}
-
-console.log(
-
-"EMAIL FINAL:"
-
-)
-
-console.log(
-
-emailFinal
-
-)
-
-    // ==========================
-    // SALVAR SUPABASE
+    // CONSULTA PAGAMENTO MP
     // ==========================
 
-    const response = await fetch(
-      `${process.env.SUPABASE_URL}/rest/v1/assinaturas`,
+    const pagamento = await fetch(
+
+      `https://api.mercadopago.com/v1/payments/${paymentId}`,
+
       {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          apikey: process.env.SUPABASE_KEY,
+
+        headers:{
+
           Authorization:
-            `Bearer ${process.env.SUPABASE_KEY}`,
-          Prefer: "resolution=merge-duplicates"
-        },
-        body: JSON.stringify({
 
-  payment_id:
-    String(paymentId),
+          `Bearer ${process.env.MP_ACCESS_TOKEN}`
 
-  status:
-    pagamentoData.status,
+        }
 
-  valor:
-    pagamentoData.transaction_amount,
-
-  usuario_id:
-    pagamentoData.external_reference,
-
-  email_pagador:
-
-emailFinal,
-
-  data_pagamento:
-    pagamentoData.date_approved,
-
-  comprovante_pix:
-
-    JSON.stringify({
-
-      id:
-        pagamentoData.id,
-
-      valor:
-        pagamentoData.transaction_amount,
-
-      data:
-        pagamentoData.date_approved,
-
-      status:
-        pagamentoData.status,
-
-      metodo:
-        pagamentoData.payment_method_id,
-
-      email:
-
-emailFinal
-
-    }),
-
-  data_brasilia:
-
-    new Date(
-      Date.now() - 10800000
-    ).toISOString()
-
-})
       }
+
     )
 
-    const data = await response.text()
+    const pagamentoData =
 
-    console.log("STATUS SUPABASE:")
-    console.log(response.status)
+    await pagamento.json()
 
-    console.log("RESPOSTA SUPABASE:")
-    console.log(data)
+    console.log(
+
+      "PAGAMENTO JSON"
+
+    )
+
+    console.log(
+
+      JSON.stringify(
+
+        pagamentoData,
+
+        null,
+
+        2
+
+      )
+
+    )
+
+    const usuarioId =
+
+    pagamentoData.external_reference
+
+    let emailFinal =
+
+    "EMAIL_NAO_ENCONTRADO"
+
+    // ==========================
+    // BUSCAR EMAIL TEMPORARIO
+    // ==========================
+
+    try{
+
+      const buscaEmail =
+
+      await fetch(
+
+`${process.env.SUPABASE_URL}/rest/v1/pagamentos_pendentes?usuario_id=eq.${usuarioId}`,
+
+      {
+
+        headers:{
+
+          apikey:
+
+          process.env.SUPABASE_KEY,
+
+          Authorization:
+
+`Bearer ${process.env.SUPABASE_KEY}`
+
+        }
+
+      }
+
+      )
+
+      const dadosEmail =
+
+      await buscaEmail.json()
+
+      if(
+
+        dadosEmail?.length
+
+      ){
+
+        emailFinal =
+
+        dadosEmail[0].email
+
+      }
+
+    }
+
+    catch(e){
+
+      console.log(
+
+        "ERRO EMAIL"
+
+      )
+
+      console.log(e)
+
+    }
+
+    console.log(
+
+      "EMAIL FINAL:"
+
+    )
+
+    console.log(
+
+      emailFinal
+
+    )
+
+    if(
+
+      pagamentoData.status !==
+
+      "approved"
+
+    ){
+
+      return res.status(200).json({
+
+        ignored:true
+
+      })
+
+    }
+
+    // ==========================
+    // SALVAR ASSINATURA
+    // ==========================
+
+    const salvar = await fetch(
+
+`${process.env.SUPABASE_URL}/rest/v1/assinaturas`,
+
+      {
+
+        method:"POST",
+
+        headers:{
+
+          "Content-Type":
+
+          "application/json",
+
+          apikey:
+
+          process.env.SUPABASE_KEY,
+
+          Authorization:
+
+`Bearer ${process.env.SUPABASE_KEY}`,
+
+          Prefer:
+
+"resolution=merge-duplicates"
+
+        },
+
+        body:JSON.stringify({
+
+          payment_id:
+
+          String(paymentId),
+
+          status:
+
+          pagamentoData.status,
+
+          valor:
+
+          pagamentoData.transaction_amount,
+
+          usuario_id:
+
+          usuarioId,
+
+          email_pagador:
+
+          emailFinal,
+
+          data_pagamento:
+
+          pagamentoData.date_approved,
+
+          comprovante_pix:
+
+          JSON.stringify({
+
+            id:
+
+            pagamentoData.id,
+
+            valor:
+
+            pagamentoData.transaction_amount,
+
+            data:
+
+            pagamentoData.date_approved,
+
+            status:
+
+            pagamentoData.status,
+
+            metodo:
+
+            pagamentoData.payment_method_id,
+
+            email:
+
+            emailFinal
+
+          }),
+
+          data_brasilia:
+
+          new Date(
+
+            Date.now()
+
+            -
+
+            10800000
+
+          ).toISOString()
+
+        })
+
+      }
+
+    )
+
+    console.log(
+
+      "STATUS SUPABASE"
+
+    )
+
+    console.log(
+
+      salvar.status
+
+    )
+
+    console.log(
+
+      await salvar.text()
+
+    )
 
     return res.status(200).json({
-      success: true
+
+      success:true
+
     })
 
-  } catch (err) {
+  }
+
+  catch(err){
 
     console.log(err)
 
     return res.status(500).json({
-      error: err.message
+
+      error:err.message
+
     })
 
   }
