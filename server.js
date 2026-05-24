@@ -168,40 +168,7 @@ null,
 
 console.log("========== FIM JSON ==========")
 
-console.log(
-JSON.stringify(
-pagamentoData,
-null,
-2
-)
-)
 
-console.log("EMAIL DEBUG")
-
-console.log(
-"payer:",
-pagamentoData.payer
-)
-
-console.log(
-"additional_info:",
-pagamentoData.additional_info
-)
-
-console.log(
-"metadata:",
-pagamentoData.metadata
-)
-
-console.log(
-"transaction_details:",
-pagamentoData.transaction_details
-)
-
-console.log(
-"point_of_interaction:",
-pagamentoData.point_of_interaction
-)
 
     // ==========================
     // APENAS APROVADO
