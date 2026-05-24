@@ -163,6 +163,28 @@ app.post("/webhook", async (req, res) => {
 
     const pagamentoData = await pagamento.json()
 
+const emailFinal =
+
+pagamentoData.payer?.email ||
+
+pagamentoData.additional_info?.payer?.email ||
+
+pagamentoData.metadata?.email ||
+
+pagamentoData.transaction_details?.payer?.email ||
+
+pagamentoData.card?.cardholder?.email ||
+
+pagamentoData.point_of_interaction
+?.transaction_data
+?.payer_email ||
+
+"EMAIL_NAO_DISPONIVEL"
+
+console.log("EMAIL ENCONTRADO:")
+console.log(emailFinal)
+
+
 console.log("========== PAGAMENTO JSON ==========")
 
 console.log(
@@ -220,21 +242,7 @@ console.log("========== FIM JSON ==========")
 
   email_pagador:
 
-pagamentoData.payer?.email ||
-
-pagamentoData.additional_info?.payer?.email ||
-
-pagamentoData.metadata?.email ||
-
-pagamentoData.transaction_details?.payer?.email ||
-
-pagamentoData.card?.cardholder?.email ||
-
-pagamentoData.point_of_interaction
- ?.transaction_data
- ?.payer_email ||
-
-"EMAIL_NAO_DISPONIVEL",
+emailFinal,
 
   data_pagamento:
     pagamentoData.date_approved,
@@ -260,21 +268,7 @@ pagamentoData.point_of_interaction
 
       email:
 
-pagamentoData.payer?.email ||
-
-pagamentoData.additional_info?.payer?.email ||
-
-pagamentoData.metadata?.email ||
-
-pagamentoData.transaction_details?.payer?.email ||
-
-pagamentoData.card?.cardholder?.email ||
-
-pagamentoData.point_of_interaction
- ?.transaction_data
- ?.payer_email ||
-
-"EMAIL_NAO_DISPONIVEL"
+emailFinal
 
     }),
 
