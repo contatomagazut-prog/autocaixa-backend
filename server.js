@@ -27,6 +27,9 @@ app.post("/criar-pagamento", async (req, res) => {
 
   try {
 
+const response = await fetch(
+  "https://api.mercadopago.com/checkout/preferences",
+
     const response = await fetch(
       "https://api.mercadopago.com/checkout/preferences",
       {
