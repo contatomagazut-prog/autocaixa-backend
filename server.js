@@ -1,6 +1,7 @@
 import express from "express"
 import cors from "cors"
 import dotenv from "dotenv"
+import fetch from "node-fetch"
 
 dotenv.config()
 
@@ -365,7 +366,7 @@ app.post("/webhook", async (req, res) => {
 
     const salvar = await fetch(
 
-`${process.env.SUPABASE_URL}/rest/v1/assinaturas`,
+`${process.env.SUPABASE_URL}/rest/v1/assinaturas?on_conflict=payment_id`,
 
       {
 
@@ -398,12 +399,26 @@ app.post("/webhook", async (req, res) => {
           String(paymentId),
 
           status:
+pagamentoData.status,
 
-          pagamentoData.status,
+plano_ativo:
+true,
 
-          valor:
+vencimento_plano:
 
-          pagamentoData.transaction_amount,
+new Date(
+
+Date.now()
+
++
+
+30*24*60*60*1000
+
+).toISOString(),
+
+valor:
+
+pagamentoData.transaction_amount,
 
           usuario_id:
 
