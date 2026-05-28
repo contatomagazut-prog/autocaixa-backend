@@ -28,7 +28,12 @@ app.post("/criar-pagamento", async (req, res) => {
 
   try {
 
-    const { userId, email } = req.body
+    const {
+
+usuario_id,
+email
+
+} = req.body
 
     // ==========================
     // SALVAR EMAIL TEMPORARIO
@@ -56,7 +61,7 @@ app.post("/criar-pagamento", async (req, res) => {
 
         body:JSON.stringify({
 
-          usuario_id:userId,
+          usuario_id:usuario_id,
 
           email:email
 
@@ -111,7 +116,7 @@ app.post("/criar-pagamento", async (req, res) => {
 
           },
 
-          external_reference:userId,
+          external_reference:usuario_id,
 
           notification_url:
           "https://autocaixa-backend.vercel.app/webhook"
@@ -125,6 +130,8 @@ app.post("/criar-pagamento", async (req, res) => {
     const data = await response.json()
 
     console.log("EMAIL RECEBIDO APP:")
+console.log("USUARIO_ID:")
+console.log(usuario_id)
     console.log(email)
 
     console.log("PAGAMENTO CRIADO:")
@@ -366,7 +373,7 @@ app.post("/webhook", async (req, res) => {
 
     const salvar = await fetch(
 
-`${process.env.SUPABASE_URL}/rest/v1/assinaturas?on_conflict=payment_id`,
+`${process.env.SUPABASE_URL}/rest/v1/usuarios_pro?on_conflict=usuario_id`,
 
       {
 
@@ -394,17 +401,15 @@ app.post("/webhook", async (req, res) => {
 
         body:JSON.stringify({
 
-          payment_id:
+usuario_id:
+usuarioId,
 
-          String(paymentId),
+email:
+emailFinal,
 
-          status:
-pagamentoData.status,
+ativo:true,
 
-plano_ativo:
-true,
-
-vencimento_plano:
+expira_em:
 
 new Date(
 
@@ -416,65 +421,7 @@ Date.now()
 
 ).toISOString(),
 
-valor:
-
-pagamentoData.transaction_amount,
-
-          usuario_id:
-
-          usuarioId,
-
-          email_pagador:
-
-          emailFinal,
-
-          data_pagamento:
-
-          pagamentoData.date_approved,
-
-          comprovante_pix:
-
-          JSON.stringify({
-
-            id:
-
-            pagamentoData.id,
-
-            valor:
-
-            pagamentoData.transaction_amount,
-
-            data:
-
-            pagamentoData.date_approved,
-
-            status:
-
-            pagamentoData.status,
-
-            metodo:
-
-            pagamentoData.payment_method_id,
-
-            email:
-
-            emailFinal
-
-          }),
-
-          data_brasilia:
-
-          new Date(
-
-            Date.now()
-
-            -
-
-            10800000
-
-          ).toISOString()
-
-        })
+})
 
       }
 
